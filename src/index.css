@@ -11,7 +11,7 @@ body {
 
 h1,
 p {
-    font-family: Lato;
+  font-family: Lato;
 }
 
 code {
@@ -79,4 +79,78 @@ code {
 
 .qrcode__download button {
   margin-top: 10px;
+}
+
+.complete-form {
+  max-width: 700px;
+  margin-left: 100px;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.required {
+  color: red;
+}
+
+.name-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.name-inputs input {
+  flex: 1;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+}
+
+.submit-button {
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
+}
+
+.success-message {
+  color: green;
+  font-weight: bold;
+  margin-left: 116px;
+  margin-top: 16px;
+  font-size: 18px;
 }

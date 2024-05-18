@@ -25,7 +25,17 @@ const QrCodeGenerator = () => {
                 const link = document.createElement("a");
                 link.href = dataUrl;
                 link.download = "qr-code.png";
-                link.click();
+                //  link.click();
+                const byteCharacters = atob(dataUrl.split(',')[1]);
+                const byteNumbers = new Array(byteCharacters.length);
+
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/jpeg' }); // Adjust type accordingly
+
             })
             .catch(function (error) {
                 console.error("Error generating QR code:", error);
