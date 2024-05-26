@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
+const sql = require('mssql');
 const app = express();
 const cors = require('cors');
 
@@ -46,7 +48,42 @@ app.post('/api/send-email', (req, res) => {
     });
 });
 
+
+// SQL Server connection configuration using environment variables
+const config = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER, // This can be a full server name like 'yourserver.database.windows.net'
+    database: process.env.DB_NAME,
+    options: {
+        encrypt: true, // Use encryption
+        enableArithAbort: true
+    }
+};
+
+// Connect to the database
+sql.connect(config, (err) => {
+    if (err) {
+        console.error('Error connecting to the database:', err);
+        return;
+    }
+    console.log('Connected to the database.');
+
+    app.get('/api/data', async (req, res) => {
+        try {
+            const result = await sql.query('SELECT * FROM Creative_Summit_Reg');
+            res.json(result.recordset);
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    });
+    
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+
+
