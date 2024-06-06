@@ -71,14 +71,39 @@ const SignUpPage = () => {
             .toPng(qrCodeRef.current)
             .then(function (dataUrl) {
                 setQrIsVisible(false);
+                saveRegistration();
                 // send email the generated QR code
                 const recipientEmail = formData.email; // Replace with recipient's email
-                sendQRCodeEmail(recipientEmail, dataUrl);
+                // sendQRCodeEmail(recipientEmail, dataUrl);
             })
             .catch(function (error) {
                 console.error("Error generating QR code:", error);
             });
     };
+
+
+    const saveRegistration = async () => {
+        try {
+            const hostname = window.location.hostname; // Get the current hostname
+            const apiUrl = `http://${hostname}:5000/api/create`; // Construct the API URL
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                alert('Record inserted successfully!');
+            } else {
+                alert('Failed to insert record');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error inserting record');
+        }
+    }
 
     const sendQRCodeEmail = async (recipientEmail, dataUrl) => {
         const hostname = window.location.hostname; // Get the current hostname

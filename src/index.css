@@ -134,6 +134,7 @@ small {
   color: #666;
 }
 
+.send-email-button,
 .submit-button {
   padding: 10px 20px;
   color: #fff;
@@ -143,8 +144,14 @@ small {
   cursor: pointer;
 }
 
+.send-email-button:hover,
 .submit-button:hover {
   background-color: #0056b3;
+}
+
+.send-email-button:disabled {
+  cursor: not-allowed;
+  background-color: grey;
 }
 
 .success-message {
@@ -158,7 +165,7 @@ small {
 .table-container {
   width: 97%;
   padding: 16px;
-  overflow-x: scroll;
+  /* overflow-x: scroll; */
 }
 
 .table {
