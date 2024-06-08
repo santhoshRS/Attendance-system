@@ -74,7 +74,7 @@ const SignUpPage = () => {
                 saveRegistration();
                 // send email the generated QR code
                 const recipientEmail = formData.email; // Replace with recipient's email
-                // sendQRCodeEmail(recipientEmail, dataUrl);
+                sendQRCodeEmail(recipientEmail, dataUrl);
             })
             .catch(function (error) {
                 console.error("Error generating QR code:", error);

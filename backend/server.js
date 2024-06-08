@@ -76,12 +76,14 @@ const config = {
     database: process.env.DB_NAME,
     options: {
         encrypt: true, // Use encryption
-        enableArithAbort: true
+        enableArithAbort: true,
+        trustServerCertificate: true
     }
 };
 
 // Connect to the database
 sql.connect(config, (err) => {
+
     if (err) {
         console.error('Error connecting to the database:', err);
         return;
@@ -90,10 +92,27 @@ sql.connect(config, (err) => {
 
     app.get('/api/data', async (req, res) => {
         try {
-            const result = await sql.query('SELECT * FROM Creative_Summit_Reg where RegistrationID in (1198, 2198)');
+            const pool = await sql.connect(config);
+            const result = await pool.request()
+                .query('SELECT * FROM Creative_Summit_Reg');
             res.json(result.recordset);
-        } catch (err) {
-            res.status(500).send(err);
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    });
+
+    app.get('/api/data/:id', async (req, res) => {
+        const id = req.params.id;
+        try {
+            const pool = await sql.connect(config);
+            const result = await pool.request()
+                .input('RegistrationID', sql.Int, id)
+                .query('SELECT * FROM Creative_Summit_Reg WHERE RegistrationID = @RegistrationID');
+            res.json(result.recordset);
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 
@@ -128,9 +147,34 @@ sql.connect(config, (err) => {
         } catch (err) {
             console.error('Error inserting record: ', err);
             res.status(500).send('Error inserting record');
-        } finally {
-            // Close the connection
-            await sql.close();
+        } 
+    });
+
+    app.post('/api/checkin', async (req, res) => {
+        const { id } = req.body;
+
+        try {
+
+            // Get the connection pool
+            const pool = await sql.connect(config);
+
+            // SQL insert statement
+            const insertQuery = `
+            INSERT INTO UserCheckin (RegistrationID, Checkin_Status, Checkin_Time) 
+            VALUES (@RegistrationID, @Checkin_Status, @Checkin_Time)
+          `;
+
+            // Execute the insert query
+            await pool.request()
+                .input('RegistrationID', sql.Int, id) // Use appropriate sql data type and value
+                .input('Checkin_Status', sql.Bit, true)
+                .input('Checkin_Time', sql.DateTime, new Date())
+                .query(insertQuery);
+
+            res.status(200).send('Record inserted successfully!');
+        } catch (err) {
+            console.error('Error inserting record: ', err);
+            res.status(500).send('Error inserting record');
         }
     });
 

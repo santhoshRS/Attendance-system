@@ -11,13 +11,16 @@ const Dashboard = () => {
     const [url, setUrl] = useState("");
     const [qrIsVisible, setQrIsVisible] = useState(false);
 
-    const [rows, setRows] = useState([]);
     const [buttonDisabled, setButtonDisabled] = useState([]);
 
     useEffect(() => {
+        getData()
+    }, []);
+
+    const getData = async () => {
         const hostname = window.location.hostname; // Get the current hostname
         const apiUrl = `http://${hostname}:5000/api/data`; // Construct the API URL
-        fetch(apiUrl)
+        await fetch(apiUrl)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
@@ -27,7 +30,6 @@ const Dashboard = () => {
             .then(data => {
                 setData(data);
                 if (data && data.length > 0) {
-                    setRows(data);
                     setButtonDisabled(new Array(data.length).fill(false));
                 }
                 console.log(data);
@@ -35,7 +37,7 @@ const Dashboard = () => {
             .catch(error => {
                 console.log(error);
             });
-    }, []);
+    }
 
     const sendQRCodeEmail = (Id, email, index) => {
         const updatedButtonDisabled = [...buttonDisabled];

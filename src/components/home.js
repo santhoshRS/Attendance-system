@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import '../index.css'
 import main_banner from "../assets/images/main_banner.png"
 
