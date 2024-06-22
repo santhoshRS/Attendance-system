@@ -1,61 +1,26 @@
-import React, { useEffect, useState, useRef } from 'react';
-import QrReader from "react-qr-reader";
-import jsQR from 'jsqr';
+import React, { useState } from 'react';
+import QrReader from 'react-qr-scanner';
+import '../index.css';
 
 const Scan = () => {
   const [result, setResult] = useState('');
   const [session, setSession] = useState('');
   const [error, setError] = useState('');
-  const [isCameraEnabled, setIsCameraEnabled] = useState(true);
-  const fileInputRef = useRef(null);
+  const [newScan, setNewScan] = useState(false);
 
-  const handleScan = data => {
+  const handleScan = (data) => {
     if (data) {
-      console.log('Scanned Data:', data);
-      try {
-        const obj = JSON.parse(data);
-        console.log(obj.RegistrationID);
-        getRegistrationDetail(obj.RegistrationID);
-        setIsCameraEnabled(false);  // Disable camera after successful scan
-      } catch (error) {
-        setError('Invalid QR code format');
-      }
+      const obj = JSON.parse(data.text);
+      console.log(obj.RegistrationID);
+      getRegistrationDetail(obj.RegistrationID);
+      logAttendance(obj.RegistrationID);
+      setNewScan(true);
     }
-  };
+  }
 
-  const handleError = err => {
-    console.error('Error:', err);
-    setError(err.message);
-  };
-
-  const handleUpload = event => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.src = reader.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          context.drawImage(img, 0, 0, img.width, img.height);
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
-          if (code) {
-            const obj = JSON.parse(code.data);
-            console.log(obj.RegistrationID);
-            getRegistrationDetail(obj.RegistrationID);
-            logAttendance(obj.RegistrationID);
-          } else {
-            setError('No QR code found in the image');
-          }
-        };
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const handleError = (err) => {
+    setError(err);
+  }
 
   const getRegistrationDetail = async (id) => {
     try {
@@ -97,33 +62,28 @@ const Scan = () => {
     }
   };
 
-  useEffect(() => {
-    // Re-enable camera when component mounts or when result is reset
-    if (!isCameraEnabled) {
-      setIsCameraEnabled(true);
-    }
-  }, [isCameraEnabled]);
+  const previewStyle = {
+    height: 240,
+    width: 320,
+  }
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>QR Code Scanner & Uploader</h1>
+      <h1>QR Code Scanner</h1>
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-      {isCameraEnabled && (
-        <QrReader
+      {
+        newScan &&
+        <button type="button" className="submit-button"
+          onClick={() => setNewScan(false)}>Scan New QR Code</button>
+      }
+      {
+        !newScan && <QrReader
           delay={100}
+          style={previewStyle}
           onError={handleError}
           onScan={handleScan}
-          style={{ width: '300px', margin: '0 auto' }}
         />
-      )}
-      <p>OR</p>
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleUpload}
-        style={{ marginTop: '20px' }}
-      />
+      }
       <p>{result}</p>
       <p>{session}</p>
     </div>
