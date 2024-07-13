@@ -1,0 +1,8 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/99b5004e-b6b2-4fbf-9f5d-a70eed401b5c/resourceGroups/TheCreativeSummit/providers/Microsoft.Web/sites/TheCreativeSummitServer",
+    "appService.deploySubpath": "backend",
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ]
+}

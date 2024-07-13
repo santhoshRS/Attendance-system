@@ -191,3 +191,18 @@ small {
 .table tbody tr:nth-child(even) {
   background-color: #f2f2f2;
 }
+
+.submit-button {
+  display: flex;
+  margin: 0 auto;
+  margin-top: 10px;
+}
+
+.expanded-content {
+  width: 30%;
+}
+
+.search-container {
+  padding: 10px 0px 0px 16px;
+  width: 500px;
+}

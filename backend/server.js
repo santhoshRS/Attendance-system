@@ -3,11 +3,16 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const sql = require('mssql');
-const app = express();
 const cors = require('cors');
+
+const app = express();
 
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS for all routes
+
+app.get('/', (req, res) => {
+    res.send('NodeJs Backend Server');
+});
 
 // Set up your email service credentials
 // const transporter = nodemailer.createTransport({
@@ -120,18 +125,18 @@ sql.connect(config, (err) => {
         const { firstName, lastName, email, phone, organization, classSelection, location, socialMedia, comments } = req.body;
 
         try {
-
             // Get the connection pool
             const pool = await sql.connect(config);
 
-            // SQL insert statement
+            // SQL insert statement with OUTPUT clause
             const insertQuery = `
-            INSERT INTO Creative_Summit_Reg (FirstName, LastName, Email, Phone, Organization, ClassName, Location, SocialMedia, Comment) 
-            VALUES (@FirstName, @LastName, @Email, @Phone, @Organization, @ClassName, @Location, @SocialMedia, @Comment)
-          `;
+                INSERT INTO Creative_Summit_Reg (FirstName, LastName, Email, Phone, Organization, ClassName, Location, SocialMedia, Comment) 
+                OUTPUT INSERTED.RegistrationID
+                VALUES (@FirstName, @LastName, @Email, @Phone, @Organization, @ClassName, @Location, @SocialMedia, @Comment)
+            `;
 
             // Execute the insert query
-            await pool.request()
+            const result = await pool.request()
                 .input('FirstName', sql.NVarChar, firstName) // Use appropriate sql data type and value
                 .input('LastName', sql.NVarChar, lastName)
                 .input('Email', sql.NVarChar, email)
@@ -143,11 +148,32 @@ sql.connect(config, (err) => {
                 .input('Comment', sql.NVarChar, comments)
                 .query(insertQuery);
 
-            res.status(200).send('Record inserted successfully!');
+            console.log('Query result:', result);
+
+            if (result.recordset && result.recordset.length > 0) {
+                const registrationID = result.recordset[0].RegistrationID;
+                res.status(200).json({ message: 'Record inserted successfully!', registrationID: registrationID });
+            } else {
+                throw new Error('No RegistrationID returned');
+            }
         } catch (err) {
             console.error('Error inserting record: ', err);
             res.status(500).send('Error inserting record');
-        } 
+        }
+    });
+
+    app.get('/api/checkin/:id', async (req, res) => {
+        const id = req.params.id;
+        try {
+            const pool = await sql.connect(config);
+            const result = await pool.request()
+                .input('RegistrationID', sql.Int, id)
+                .query('SELECT CSR.[RegistrationID], CSR.[FirstName], CSR.[LastName], UC.[UserId], UC.[Checkin_Status], UC.[Checkin_Time] FROM [dbo].[Creative_Summit_Reg] CSR INNER JOIN [dbo].[UserCheckin] UC ON CSR.[RegistrationID] = UC.[RegistrationID] where CSR.[RegistrationID] = @RegistrationID');
+            res.json(result.recordset);
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
     });
 
     app.post('/api/checkin', async (req, res) => {

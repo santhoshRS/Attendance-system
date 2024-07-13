@@ -33,10 +33,7 @@ const SignUpPage = () => {
     const handleSubmit = (event) => {
         event.preventDefault();
         console.log('Form data submitted:', formData);
-        const name = formData.firstName + ' ' + formData.lastName;
-        // Add form submission logic here (e.g., send data to server)
-        setUrl(name);
-        setQrIsVisible(true);
+        saveRegistration();
         // Reset form fields
         setFormData({
             firstName: '',
@@ -49,43 +46,13 @@ const SignUpPage = () => {
             socialMedia: '',
             comments: ''
         });
-
-        // Set submitted to true to show success message
-        setSubmitted(true);
-        // Scroll to the top of the page
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth' // Optional: Smooth scrolling animation
-        });
-        // Set submitted to false to hide success message after 3 seconds
-        setTimeout(() => {
-            generateQRCode();
-            setSubmitted(false);
-        }, 3000);
-
-
     };
-
-    const generateQRCode = () => {
-        htmlToImage
-            .toPng(qrCodeRef.current)
-            .then(function (dataUrl) {
-                setQrIsVisible(false);
-                saveRegistration();
-                // send email the generated QR code
-                const recipientEmail = formData.email; // Replace with recipient's email
-                sendQRCodeEmail(recipientEmail, dataUrl);
-            })
-            .catch(function (error) {
-                console.error("Error generating QR code:", error);
-            });
-    };
-
 
     const saveRegistration = async () => {
         try {
-            const hostname = window.location.hostname; // Get the current hostname
-            const apiUrl = `http://${hostname}:5000/api/create`; // Construct the API URL
+            const recipientEmail = formData.email;
+            const hostname = "creativesummitserver.azurewebsites.net"; // azure hostname && for local = window.location.hostname; port 5000
+            const apiUrl = `https://${hostname}/api/create`; // Construct the API URL
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -95,7 +62,22 @@ const SignUpPage = () => {
             });
 
             if (response.ok) {
-                alert('Record inserted successfully!');
+                // Set submitted to true to show success message
+                setSubmitted(true);
+                // Scroll to the top of the page
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth' // Optional: Smooth scrolling animation
+                });
+                // Set submitted to false to hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitted(false);
+                }, 3000);
+                const responseData = await response.json();
+                const registrationID = responseData.registrationID;
+                // send email the generated QR code
+                sendQRCodeEmail(registrationID, recipientEmail);
+
             } else {
                 alert('Failed to insert record');
             }
@@ -105,9 +87,31 @@ const SignUpPage = () => {
         }
     }
 
-    const sendQRCodeEmail = async (recipientEmail, dataUrl) => {
-        const hostname = window.location.hostname; // Get the current hostname
-        const apiUrl = `http://${hostname}:5000/api/send-email`; // Construct the API URL
+    const sendQRCodeEmail = (Id, email, index) => {
+        const scanData = { "RegistrationID": Id.toString() };
+        setUrl(JSON.stringify(scanData));
+        setQrIsVisible(true);
+        setTimeout(() => {
+            generateQRCode(email);
+        }, 100);
+    };
+
+    const generateQRCode = (email) => {
+        htmlToImage
+            .toPng(qrCodeRef.current)
+            .then(function (dataUrl) {
+                setQrIsVisible(false);
+                // send email the generated QR code
+                sendEmail(email, dataUrl);
+            })
+            .catch(function (error) {
+                console.error("Error generating QR code:", error);
+            });
+    };
+
+    const sendEmail = async (recipientEmail, dataUrl) => {
+        const hostname = "creativesummitserver.azurewebsites.net"; // azure hostname && for local = window.location.hostname; port 5000
+        const apiUrl = `https://${hostname}/api/send-email`; // Construct the API URL
         const data = { email: recipientEmail, qrCodeData: dataUrl }
         try {
             const response = await fetch(apiUrl, {
@@ -119,13 +123,8 @@ const SignUpPage = () => {
             });
             if (response.ok) {
                 alert('Email sent successfully!');
-                // Reset form after successful submission
-                setFormData({
-                    name: '',
-                    email: '',
-                    message: ''
-                });
             } else {
+                console.log(response);
                 alert('Failed to send email');
             }
         } catch (error) {

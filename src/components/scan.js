@@ -7,6 +7,7 @@ const Scan = () => {
   const [session, setSession] = useState('');
   const [error, setError] = useState('');
   const [newScan, setNewScan] = useState(false);
+  const [facingMode, setFacingMode] = useState('environment'); // Initialize with back camera
 
   const handleScan = (data) => {
     if (data) {
@@ -19,13 +20,17 @@ const Scan = () => {
   }
 
   const handleError = (err) => {
-    setError(err);
+    if (err.name === 'OverconstrainedError') {
+      setError('No suitable camera found');
+    } else {
+      setError('Error accessing camera');
+    }
   }
 
   const getRegistrationDetail = async (id) => {
     try {
-      const hostname = window.location.hostname;
-      const apiUrl = `http://${hostname}:5000/api/data/${id}`;
+      const hostname = "creativesummitserver.azurewebsites.net"; // azure hostname && for local = window.location.hostname; port 5000
+      const apiUrl = `https://${hostname}/api/data/${id}`;
       const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch data');
@@ -43,8 +48,8 @@ const Scan = () => {
 
   const logAttendance = async (id) => {
     try {
-      const hostname = window.location.hostname;
-      const apiUrl = `http://${hostname}:5000/api/checkin`;
+      const hostname = "creativesummitserver.azurewebsites.net"; // azure hostname && for local = window.location.hostname; port 5000
+      const apiUrl = `https://${hostname}/api/checkin`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -63,9 +68,17 @@ const Scan = () => {
   };
 
   const previewStyle = {
-    height: 240,
-    width: 320,
+    height: 250,
+    width: 250,
   }
+
+  const videoConstraints = {
+    facingMode: facingMode // Use state for camera mode
+  };
+
+  const toggleFacingMode = () => {
+    setFacingMode((prevMode) => (prevMode === 'environment' ? 'user' : 'environment'));
+  };
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -76,16 +89,22 @@ const Scan = () => {
         <button type="button" className="submit-button"
           onClick={() => setNewScan(false)}>Scan New QR Code</button>
       }
-      {
-        !newScan && <QrReader
-          delay={100}
-          style={previewStyle}
-          onError={handleError}
-          onScan={handleScan}
-        />
-      }
-      <p>{result}</p>
-      <p>{session}</p>
+      {!newScan && (
+        <>
+          <QrReader
+            delay={100}
+            style={previewStyle}
+            constraints={{ video: videoConstraints }}
+            onError={handleError}
+            onScan={handleScan}
+          />
+          <button type="button" className="submit-button" onClick={toggleFacingMode}>
+            Switch Camera
+          </button>
+        </>
+      )}
+      <h1>{result}</h1>
+      <h1>{session}</h1>
     </div>
   );
 };
